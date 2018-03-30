@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Balkan Chat</title>
+        <link rel="icon" href="http://icons.iconarchive.com/icons/martz90/circle/512/chat-icon.png" type="image/x-icon"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <style type="text/css">
+            .navbar{
+                padding: 10px;
+                border: 0px;
+                border-radius: 0px;
+                margin: 0px;
+                background-image: url("http://www.designyourway.net/diverse/darkpat/COLOURlovers.com-box_surprise_mystery.jpg");
+            }
+            .container-fluid{
+                border: 0px;
+                border-radius: 0px;
+                background-image: url("http://www.designyourway.net/diverse/darkpat/COLOURlovers.com-box_surprise_mystery.jpg");
+            }
+            .jumbo-container{
+                padding: 0px;
+            }
+            .jumbotron{
+                margin: 0px;
+                border: 5px;
+                border-radius: 10px;
+                border-style: solid;
+                border-color: #1c1c1c;
+                height: 340px;
+                background-color: #1e1e1e;
+                
+            }
+            #name{
+                margin: 5px;
+                
+            }
+            #data{
+                margin-bottom: 5px;
+            }
+            #datasend{
+                width: 90px;
+                margin-bottom: 5px;
+            }
+            #FirstHeading {
+				color: white;
+			}
+			body {
+				background-image: url("http://www.designyourway.net/diverse/darkpat/COLOURlovers.com-box_surprise_mystery.jpg");
+			}
+.button {
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 24px;
+    border: 1px solid #a12727;
+    border-radius: 8px;
+    background: #ff4a4a;
+    background: -webkit-gradient(linear, left top, left bottom, from(#ff4a4a), to(#992727));
+    background: -moz-linear-gradient(top, #ff4a4a, #992727);
+    background: linear-gradient(to bottom, #ff4a4a, #992727);
+    text-shadow: #591717 1px 1px 1px;
+    font: normal normal bold 13px courier new;
+    color: #ffffff;
+    text-decoration: none;
+}
+.button:hover,
+.button:focus {
+    background: #ff5959;
+    background: -webkit-gradient(linear, left top, left bottom, from(#ff5959), to(#b62f2f));
+    background: -moz-linear-gradient(top, #ff5959, #b62f2f);
+    background: linear-gradient(to bottom, #ff5959, #b62f2f);
+    color: #ffffff;
+    text-decoration: none;
+}
+.button:active {
+    background: #982727;
+    background: -webkit-gradient(linear, left top, left bottom, from(#982727), to(#982727));
+    background: -moz-linear-gradient(top, #982727, #982727);
+    background: linear-gradient(to bottom, #982727, #982727);
+}
+
+        </style>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script>
+            var socket = io.connect();
+            var privateRooms= [];
+            var currentRoom= "";
+            socket.on('connect', function(){
+                //do nothing for now
+            });
+
+            socket.on('updatechat', function (username, data) {
+                $('#conversation').append('<font size="4"><b><img src="https://www.tsa-uk.org.uk/media/mem-ben/mem-cat-ass.png" height="35" width="35">  '+username + '» </b></font> ' + data + '<br>');
+            });
+
+            socket.on('updaterooms', function(rooms, roomSizes) {
+                $('#rooms').empty();
+                $.each(rooms, function(key, value) {
+                    if(value == currentRoom){
+                        $('#rooms').append('<div>' + value + "(" + roomSizes[value] + ')' + '</div>');
+                    }
+                    else{
+                        $('#rooms').append('<div><a href="#" onclick="switchRoom(\''+value+'\')">' + value + "(" + roomSizes[value] + ')' + '</a></div>');
+                    }
+                });
+                if(privateRooms.length!=0){
+                    $('#rooms').append('<div>' + '<h4>Private Room:</h4>' + '</div>');
+                }
+                $.each(privateRooms, function(key, value) {
+                    if(value == currentRoom){
+                        $('#rooms').append('<div>' + value + "(" + roomSizes[value] + ')' + '</div>');
+                    }
+                    else if(roomSizes[value]!=0){
+                        $('#rooms').append('<div><a class="button" href="#" onclick="switchRoom(\''+value+'\')">' + value + "(" + roomSizes[value] + ')' + '</a></div>');
+                    }
+                });
+            });
+
+            function startChat(){
+                var name = $('#name').val();
+                socket.emit('adduser', name);
+                $('#name-input').hide();
+                $('#chat-interface').show();
+            }
+
+            function switchRoom(room){
+                socket.emit('switchRoom', room);
+                currentRoom = room;
+            }
+
+            function JoinPrivateRoom(){
+                var roomName = prompt("New room name?");
+                if(roomName==null) return;
+                privateRooms.push(roomName);
+                socket.emit('switchRoom', roomName);
+                currentRoom = roomName;
+            }
+
+            $(function(){
+                $('#datasend').click( function() {
+                    var message = $('#data').val();
+                    $('#data').val('');
+                    socket.emit('sendchat', message);
+                    $('#data').focus();
+                });
+
+                $('#data').keypress(function(e) {
+                    if(e.which == 13) {
+                        $(this).blur();
+                        $('#datasend').focus().click();
+                    }
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <nav class="navbar navbar-inverse">
+          <div class="container-fluid">
+            <div class="navbar-header">
+              <a class="navbar-brand" href="#">Balkan Chat</a>
+            </div>
+          </div>
+        </nav>
+        <div id="name-input">
+            <div class="container-fluid text-center jumbo-container">
+                <div class="jumbotron">
+					<img src="https://image.ibb.co/c0Wyn7/logo.png" height="150" width="500">
+                    <h3 id="FirstHeading">Upisite vas Nadimak:</h3>
+                    <form class="form-inline" action="" method="">
+                        <div class="form-group">
+                            <input type="text" id="name" class="form-control" required>
+                            <input onClick="startChat()" value="Prijava" class="button" id="join-button">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div id="chat-interface" style="display: none;">
+            <div class="container-fluid">
+                <div class="row content">
+                    <div class="col-sm-3 sidenav">
+                        <h4>Sobe:</h4>
+                        <div id="rooms"></div>
+                        <hr>
+                        <div><a class="button" href="#" onClick="JoinPrivateRoom()">Join a private Room</a></div>
+                        <hr>
+                        <a class="button" href="javascript:window.location.href=window.location.href">🔃 Promijeni Nadimak</a>
+                        <hr>
+                        <a class="button" href="javascript:window.location.href=window.location.href">💨 Odjava</a>
+                        <hr>
+                    </div>
+                    <div class="col-sm-9">
+                        <div id="conversation" onfocus="this.value = this.value;" style="height:450px;width:650px;border:1px solid #ffffff;background-color: white;font:17px/26px Verdana, Geneva, sans-serif;overflow:auto;"><h3>Chat:</h3></div>
+                        <form class="form-inline" action="" method="">
+                            <div class="form-group">
+                                <input id="data" style="width:450px;" class="form-control" maxlength="60">
+                                <input class="button" id="datasend" value="►">
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </body>
+</html>
